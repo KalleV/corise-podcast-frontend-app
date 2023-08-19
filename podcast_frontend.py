@@ -4,6 +4,9 @@ import json
 import os
 
 def main():
+    """
+    Main function that runs the Streamlit app for the Newsletter Dashboard.
+    """
     st.title("Newsletter Dashboard")
 
     available_podcast_info = create_dict_from_json_files('.')
@@ -104,6 +107,15 @@ def main():
                 f"<p style='margin-bottom: 5px;'>{moment}</p>", unsafe_allow_html=True)
 
 def create_dict_from_json_files(folder_path):
+    """
+    Function that creates a dictionary of podcast information from JSON files in a given folder path.
+
+    Args:
+        folder_path (str): The path to the folder containing the JSON files.
+
+    Returns:
+        dict: A dictionary of podcast information, with the podcast name as the key and the podcast details as the value.
+    """
     json_files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
     data_dict = {}
 
@@ -118,6 +130,15 @@ def create_dict_from_json_files(folder_path):
     return data_dict
 
 def process_podcast_info(url):
+    """
+    Function that processes a given podcast RSS feed URL and retrieves podcast guest information.
+
+    Args:
+        url (str): The URL of the podcast RSS feed.
+
+    Returns:
+        dict: A dictionary of podcast information, with the podcast details, guest information, and key moments.
+    """
     f = modal.Function.lookup("corise-podcast-project", "process_podcast")
     output = f.call(url, '/content/podcast/')
     return output
