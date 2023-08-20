@@ -38,18 +38,26 @@ def main():
     process_button = st.sidebar.button("Process Podcast Feed")
     st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
-    if process_button:
-        podcast_info = {}
+    st.markdown(
+        """
+        <script>
+            function scrollToElement(selector) {
+                document.querySelector(selector).scrollIntoView({ behavior: 'smooth' });
+            }
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
 
+    if process_button:
         st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
-        st.markdown(
-            """
+        st.markdown("""
             <script>
-            document.querySelector("#spinner-anchor").scrollIntoView({ behavior: 'smooth' });
+                scrollToElement('#spinner-anchor');
             </script>
-            """,
-            unsafe_allow_html=True
-        )
+        """)
+
+        podcast_info = {}
 
         # Process the new podcast feed
         with st.spinner("Processing podcast..."):
