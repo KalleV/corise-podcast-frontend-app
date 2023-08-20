@@ -41,14 +41,13 @@ def main():
     if process_button:
         podcast_info = {}
 
-        st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
-        st.markdown(
+        st.write('<div id="spinner-anchor"></div>')
+        st.write(
             """
             <script>
             document.querySelector("#spinner-anchor").scrollIntoView({ behavior: 'smooth' });
             </script>
-            """,
-            unsafe_allow_html=True,
+            """
         )
 
         # Process the new podcast feed
