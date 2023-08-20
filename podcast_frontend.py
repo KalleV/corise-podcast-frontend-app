@@ -38,7 +38,8 @@ def main():
     process_button = st.sidebar.button("Process Podcast Feed")
     st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
-    st.markdown(
+    # Using st.write so that scrollToElement is a global function
+    st.write(
         """
         <script>
             function scrollToElement(selector) {
@@ -51,7 +52,7 @@ def main():
 
     if process_button:
         st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
-        st.markdown(
+        st.write(
             """
             <script>
                 scrollToElement('#spinner-anchor');
