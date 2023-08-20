@@ -1,6 +1,9 @@
 # corise-podcast-frontend-app
 
 ## Deploy backend to Modal
+# corise-podcast-frontend-app
+
+## Deploy backend to Modal
 
 ```bash
 modal deploy ./podcast_backend.py
@@ -18,4 +21,10 @@ modal run ./podcast_backend.py --url https://access.acast.com/rss/d556eb54-6160-
 
 ```bash
 python3 transcribe_podcast.py
+```
+
+## Fetch podcast guest information using Modal function
+
+```bash
+python3 get_podcast_guest.py
 ```
