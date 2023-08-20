@@ -64,7 +64,7 @@ def main():
             st.sidebar.error("Invalid URL", icon="🚨")
             st.session_state.can_process_podcast = False
         else:
-            st.success('URL looks good!', icon="✅")
+            st.sidebar.success('URL looks good!', icon="✅")
             st.session_state.can_process_podcast = True
 
     # Button to process the new podcast feed
