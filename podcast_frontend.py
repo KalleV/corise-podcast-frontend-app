@@ -3,7 +3,21 @@ import modal
 import json
 import os
 import validators
-import string
+
+def validate_url(url):
+    """
+    Function that validates a given URL.
+
+    Args:
+        url (str): The URL to validate.
+
+    Returns:
+        bool: True if the URL is valid, False otherwise.
+    """
+    if not validators.url(url):
+        st.sidebar.error("Invalid URL")
+        return False
+    return True
 
 def main():
     """
@@ -15,6 +29,9 @@ def main():
     # Cache for processing podcasts
     if 'processed' not in st.session_state:
         st.session_state.processed = {}
+
+    if 'can_process_podcast' not in st.session_state:
+        st.session_state.can_process_podcast = True
 
     # Create a dictionary of available podcast information from JSON files in the current directory
     available_podcast_info = create_dict_from_json_files('.')
@@ -44,13 +61,14 @@ def main():
     if podcast_url:
         # Validate the URL
         if not validators.url(podcast_url):
-            st.sidebar.error("Invalid URL")
-        # Check for control characters
-        elif any(char in string.control for char in podcast_url):
-            st.sidebar.error("URL contains control characters")
+            st.sidebar.error("Invalid URL", icon="🚨")
+            st.session_state.can_process_podcast = False
+        else:
+            st.success('URL looks good!', icon="✅")
+            st.session_state.can_process_podcast = True
 
     # Button to process the new podcast feed
-    process_button = st.sidebar.button("Process Podcast Feed")
+    process_button = st.sidebar.button("Process Podcast Feed", disabled=not st.session_state.can_process_podcast)
     st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
     if process_button:
@@ -68,6 +86,9 @@ def main():
                     podcast_info = process_podcast_info(podcast_url)
 
                     st.session_state.processed[podcast_url] = podcast_info
+
+                    # Celebratory balloons: https://docs.streamlit.io/library/api-reference/status/st.balloons
+                    st.balloons()
                 except Exception as e:
                     st.error(f"Error processing podcast: {e}")
 
