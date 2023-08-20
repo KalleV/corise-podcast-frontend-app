@@ -122,13 +122,6 @@ def render_podcast_info(podcast_info):
             st.subheader("Podcast Guest")
             st.write("No guest information available")
 
-    with col4:
-        # Make the guest details section collapsible
-        with st.expander("Podcast Guest Details"):
-            guest_details = podcast_info["podcast_guest"]['summary']
-            for detail in guest_details:
-                st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
-
     # Display the five key moments
     st.subheader("Key Moments")
     key_moments = podcast_info['podcast_highlights']
