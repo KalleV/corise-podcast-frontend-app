@@ -25,38 +25,7 @@ def main():
         # Right section - Newsletter content
         st.header("Newsletter Content")
 
-        # Display the podcast title
-        st.subheader("Episode Title")
-        st.write(podcast_info['podcast_details']['episode_title'])
-
-        # Display the podcast summary and the cover image in a side-by-side layout
-        col1, col2 = st.columns([7, 3])
-
-        with col1:
-            # Display the podcast episode summary
-            st.subheader("Podcast Episode Summary")
-            st.write(podcast_info['podcast_summary'])
-
-        with col2:
-            st.image(podcast_info['podcast_details']['episode_image'], caption="Podcast Cover", width=300, use_column_width=True)
-
-        # Display the podcast guest and their details in a side-by-side layout
-        col3, col4 = st.columns([3, 7])
-
-        with col3:
-            st.subheader("Podcast Guest")
-            st.write(podcast_info['podcast_guest']['name'])
-
-        with col4:
-            st.subheader("Podcast Guest Details")
-            st.write(podcast_info["podcast_guest"]['summary'])
-
-        # Display the five key moments
-        st.subheader("Key Moments")
-        key_moments = podcast_info['podcast_highlights']
-        for moment in key_moments.split('\n'):
-            st.markdown(
-                f"<p style='margin-bottom: 5px;'>{moment}</p>", unsafe_allow_html=True)
+        render_podcast_info(podcast_info)
 
     # User Input box
     st.sidebar.subheader("Add and Process New Podcast Feed")
@@ -73,38 +42,7 @@ def main():
         # Right section - Newsletter content
         st.header("Newsletter Content")
 
-        # Display the podcast title
-        st.subheader("Episode Title")
-        st.write(podcast_info['podcast_details']['episode_title'])
-
-        # Display the podcast summary and the cover image in a side-by-side layout
-        col1, col2 = st.columns([7, 3])
-
-        with col1:
-            # Display the podcast episode summary
-            st.subheader("Podcast Episode Summary")
-            st.write(podcast_info['podcast_summary'])
-
-        with col2:
-            st.image(podcast_info['podcast_details']['episode_image'], caption="Podcast Cover", width=300, use_column_width=True)
-
-        # Display the podcast guest and their details in a side-by-side layout
-        col3, col4 = st.columns([3, 7])
-
-        with col3:
-            st.subheader("Podcast Guest")
-            st.write(podcast_info['podcast_guest']['name'])
-
-        with col4:
-            st.subheader("Podcast Guest Details")
-            st.write(podcast_info["podcast_guest"]['summary'])
-
-        # Display the five key moments
-        st.subheader("Key Moments")
-        key_moments = podcast_info['podcast_highlights']
-        for moment in key_moments.split('\n'):
-            st.markdown(
-                f"<p style='margin-bottom: 5px;'>{moment}</p>", unsafe_allow_html=True)
+        render_podcast_info(podcast_info)
 
 def create_dict_from_json_files(folder_path):
     """
@@ -143,5 +81,47 @@ def process_podcast_info(url):
     output = f.call(url, '/content/podcast/')
     return output
 
+def render_podcast_info(podcast_info):
+    """
+    Function that renders the podcast details, guest information, and key moments.
+
+    Args:
+        podcast_info (dict): A dictionary of podcast information, with the podcast details, guest information, and key moments.
+    """
+    # Display the podcast title
+    st.subheader("Episode Title")
+    st.write(podcast_info['podcast_details']['episode_title'])
+
+    # Display the podcast summary and the cover image in a side-by-side layout
+    col1, col2 = st.columns([7, 3])
+
+    with col1:
+        # Display the podcast episode summary
+        st.subheader("Podcast Episode Summary")
+        st.write(podcast_info['podcast_summary'])
+
+    with col2:
+        st.image(podcast_info['podcast_details']['episode_image'], caption="Podcast Cover", width=300, use_column_width=True)
+
+    # Display the podcast guest and their details in a side-by-side layout
+    col3, col4 = st.columns([3, 7])
+
+    with col3:
+        st.subheader("Podcast Guest")
+        st.write(podcast_info['podcast_guest']['name'])
+
+    with col4:
+        st.subheader("Podcast Guest Details")
+        guest_details = podcast_info["podcast_guest"]['summary']
+        for detail in guest_details:
+            st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
+
+    # Display the five key moments
+    st.subheader("Key Moments")
+    key_moments = podcast_info['podcast_highlights']
+    for moment in key_moments.split('\n'):
+        st.markdown(
+            f"<p style='margin-bottom: 5px;'>{moment}</p>", unsafe_allow_html=True)
+        
 if __name__ == '__main__':
     main()
