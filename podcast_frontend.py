@@ -36,7 +36,18 @@ def main():
 
     # User Input box
     st.sidebar.subheader("Add and Process New Podcast Feed")
+    import validators
+    import string
+
     podcast_url = st.sidebar.text_input("Link to RSS Feed")
+
+    if podcast_url:
+        # Validate the URL
+        if not validators.url(podcast_url):
+            st.sidebar.error("Invalid URL")
+        # Check for control characters
+        elif any(char in string.control for char in podcast_url):
+            st.sidebar.error("URL contains control characters")
 
     # Button to process the new podcast feed
     process_button = st.sidebar.button("Process Podcast Feed")
