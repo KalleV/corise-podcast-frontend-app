@@ -7,41 +7,51 @@ def main():
     """
     Main function that runs the Streamlit app for the Newsletter Dashboard.
     """
+    # Set the title of the app
     st.title("Kalle's Newsletter Dashboard")
 
+    # Create a dictionary of available podcast information from JSON files in the current directory
     available_podcast_info = create_dict_from_json_files('.')
 
     # Left section - Input fields
     st.sidebar.header("Podcast RSS Feeds")
 
-    # Dropdown box
+    # Dropdown box to select from available podcast feeds
     st.sidebar.subheader("Available Podcasts Feeds")
     selected_podcast = st.sidebar.selectbox("Select Podcast", options=available_podcast_info.keys())
 
     if selected_podcast:
-
+        # Get the selected podcast's information from the dictionary
         podcast_info = available_podcast_info[selected_podcast]
 
         # Right section - Newsletter content
         st.header("Newsletter Content")
 
+        # Render the selected podcast's information
         render_podcast_info(podcast_info)
 
     # User Input box
     st.sidebar.subheader("Add and Process New Podcast Feed")
-    url = st.sidebar.text_input("Link to RSS Feed")
+    podcast_url = st.sidebar.text_input("Link to RSS Feed")
 
+    # Button to process the new podcast feed
     process_button = st.sidebar.button("Process Podcast Feed")
     st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
     if process_button:
+        podcast_info = {}
 
-        # Call the function to process the URLs and retrieve podcast guest information
-        podcast_info = process_podcast_info(url)
+        # Process the new podcast feed
+        with st.spinner("Processing podcast..."):
+            try:
+                podcast_info = process_podcast_info(podcast_url)
+            except Exception as e:
+                st.error(f"Error processing podcast: {e}")
 
         # Right section - Newsletter content
         st.header("Newsletter Content")
 
+        # Render the new podcast's information
         render_podcast_info(podcast_info)
 
 def create_dict_from_json_files(folder_path):
