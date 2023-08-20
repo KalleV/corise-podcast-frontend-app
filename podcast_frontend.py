@@ -10,6 +10,10 @@ def main():
     # Set the title of the app
     st.title("Kalle's Newsletter Dashboard")
 
+    # Cache for processing podcasts
+    if 'processed' not in st.session_state:
+        st.session_state.processed = {}
+
     # Create a dictionary of available podcast information from JSON files in the current directory
     available_podcast_info = create_dict_from_json_files('.')
 
@@ -38,37 +42,23 @@ def main():
     process_button = st.sidebar.button("Process Podcast Feed")
     st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
-    # Using st.write so that scrollToElement is a global function
-    st.write(
-        """
-        <script>
-            function scrollToElement(selector) {
-                document.querySelector(selector).scrollIntoView({ behavior: 'smooth' });
-            }
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
-
     if process_button:
-        st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
-        st.write(
-            """
-            <script>
-                scrollToElement('#spinner-anchor');
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-
         podcast_info = {}
+        
+        # Optimization if the podcast has already been processed
+        # See: https://docs.streamlit.io/library/advanced-features/button-behavior-and-examples#buttons-to-handle-expensive-or-file-writing-processes
+        if podcast_url in st.session_state.processed:
+            # Get the podcast information from the session state
+            podcast_info = st.session_state.processed[podcast_url]
+        else:
+            # Process the new podcast feed
+            with st.spinner("Processing podcast..."):
+                try:
+                    podcast_info = process_podcast_info(podcast_url)
 
-        # Process the new podcast feed
-        with st.spinner("Processing podcast..."):
-            try:
-                podcast_info = process_podcast_info(podcast_url)
-            except Exception as e:
-                st.error(f"Error processing podcast: {e}")
+                    st.session_state.processed[podcast_url] = podcast_info
+                except Exception as e:
+                    st.error(f"Error processing podcast: {e}")
 
         # Right section - Newsletter content
         st.header("Newsletter Content")
