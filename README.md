@@ -18,18 +18,37 @@ Corise Podcast Frontend App is a podcast feed parser application built using [St
 - OpenAI
 - Google Programmable Search Engine API
 
-## Installation
+## Installation & Deployment
+
+### Backend
 
 1. Clone the repository
-2. Install the required packages using `pip install -r requirements.txt`
-3. Deploy backend to Modal using `modal deploy ./podcast_backend.py`
+2. Set up a new account on [Modal](https://modal.com/)
+3. Follow the set up steps in [Modal Home](https://modal.com/home) to install the `modal-client` and create a set of tokens
+4. Create 3 secrets on Modal to run the [Podcast Backend](./podcast_backend.py):
+
+| Secret Name                    | Environment Variable Name    | Description                                                                                                                                                           |
+| ------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| my-openai-secret               | OPENAI_API_KEY               | An OpenAI API key with access to gpt-3.5-turbo-16k from [OpenAI Platform](https://platform.openai.com/account/api-keys)                                               |
+| google-custom-search-api-key   | GOOGLE_CUSTOM_SEARCH_API_KEY | A programmable Google Search API key. Follow the instructions at https://developers.google.com/custom-search/v1/introduction to set it up.                            |
+| google-custom-search-engine-id | GOOGLE_CSE_ID                | This must have a value assigned to the Search Engine ID project. Follow the instructions at https://developers.google.com/custom-search/v1/introduction to set it up. |
+
+5. Deploy the backend to Modal using `modal deploy ./podcast_backend.py`
+
+### Frontend
+
+1. Go to https://share.streamlit.io/ and set up a new account
+2. Login, then go to the [Share Apps](https://share.streamlit.io/) page to deploy a new application. Provide the following options:
+   - Repository: https://github.com/KalleV/corise-podcast-frontend-app
+   - Branch: main
+   - Main file path: "podcast_frontend.py"
 
 ## Usage
 
 1. Enter an RSS feed URL in the input box
-    - Examples:
-        - https://feed.podbean.com/thecurioustanguero/feed.xml
-        - https://maestrosdelamusica.libsyn.com/rss
+   - Examples:
+     - https://feed.podbean.com/thecurioustanguero/feed.xml
+     - https://maestrosdelamusica.libsyn.com/rss
 2. Click on the "Summarize" button to generate a summary of the podcast episode
 3. The app will also display information about the podcast guests
 
