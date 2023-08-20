@@ -51,11 +51,14 @@ def main():
 
     if process_button:
         st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
-        st.markdown("""
+        st.markdown(
+            """
             <script>
                 scrollToElement('#spinner-anchor');
             </script>
-        """)
+            """,
+            unsafe_allow_html=True
+        )
 
         podcast_info = {}
 
