@@ -4,7 +4,6 @@ def download_whisper():
   """
   Downloads the Whisper model and saves it to Container storage.
   """
-  import os
   import whisper
   print ("Download the Whisper model")
 
@@ -13,14 +12,21 @@ def download_whisper():
 
 
 stub = modal.Stub("corise-podcast-project")
-corise_image = modal.Image.debian_slim().pip_install("feedparser",
-                                                     "https://github.com/openai/whisper/archive/9f70a352f9f8630ab3aa0d06af5cb9532bd8c21d.tar.gz",
-                                                     "requests",
-                                                     "ffmpeg",
-                                                     "openai",
-                                                     "tiktoken",
-                                                     "wikipedia",
-                                                     "ffmpeg-python").apt_install("ffmpeg").run_function(download_whisper)
+
+dependencies = [
+  "feedparser",
+  "https://github.com/openai/whisper/archive/9f70a352f9f8630ab3aa0d06af5cb9532bd8c21d.tar.gz",
+  "requests",
+  "ffmpeg",
+  "openai",
+  "tiktoken",
+  "google-api-python-client",
+  "ffmpeg-python"
+]
+
+whisper_url = "https://github.com/openai/whisper/archive/9f70a352f9f8630ab3aa0d06af5cb9532bd8c21d.tar.gz"
+
+corise_image = modal.Image.debian_slim().pip_install(*dependencies).apt_install("ffmpeg").run_function(download_whisper)
 
 @stub.function(image=corise_image, gpu="any", timeout=600)
 def get_transcribe_podcast(rss_url, local_path):
@@ -67,7 +73,6 @@ def get_transcribe_podcast(rss_url, local_path):
   print ("Podcast Episode downloaded")
 
   # Load the Whisper model
-  import os
   import whisper
 
   # Load model from saved location
@@ -116,7 +121,7 @@ def get_podcast_summary(podcast_transcript):
 
   return podcastSummary
 
-@stub.function(image=corise_image, secret=modal.Secret.from_name("my-openai-secret"))
+@stub.function(image=corise_image, secrets=[modal.Secret.from_name("my-openai-secret"), modal.Secret.from_name("google-custom-search-api-key"), modal.Secret.from_name("google-custom-search-engine-id")])
 def get_podcast_guest(podcast_transcript):
   """
   Retrieves information about the guest of a podcast episode using OpenAI's GPT-3 model and Wikipedia.
@@ -128,10 +133,10 @@ def get_podcast_guest(podcast_transcript):
   - str: Information about the guest of the podcast episode.
   """
   import openai
-  import wikipedia
   import json
+  import os
 
-  from wikipedia.exceptions import PageError, DisambiguationError, HTTPTimeoutError
+  from googleapiclient.discovery import build
 
   request = podcast_transcript[:10000]
 
@@ -165,13 +170,14 @@ def get_podcast_guest(podcast_transcript):
     function_call={"name": "get_podcast_guest_information"}
   )
 
+  print("Completion:", completion)
+
   podcast_guest = ""
   podcast_guest_org = ""
   podcast_guest_title = ""
   response_message = completion["choices"][0]["message"]
+  
   if response_message.get("function_call"):
-    # Unused:
-    # function_name = response_message["function_call"]["name"]
     function_args = json.loads(response_message["function_call"]["arguments"])
     podcast_guest=function_args.get("guest_name")
     podcast_guest_org=function_args.get("guest_organization")
@@ -183,36 +189,30 @@ def get_podcast_guest(podcast_transcript):
     podcast_guest_title = ""
 
   output = {
-    "name": podcast_guest,
-    "summary": ""
+    "name": f"{podcast_guest} ({podcast_guest_title}, {podcast_guest_org})" if podcast_guest_title and podcast_guest_org else f"{podcast_guest} ({podcast_guest_title}{podcast_guest_org})" if podcast_guest_title or podcast_guest_org else podcast_guest,
+    "summary": []
   }
 
-  try:
-    search_query = f"{podcast_guest} {podcast_guest_org} {podcast_guest_title}"
-    page = wikipedia.page(search_query, auto_suggest=False)
+  api_key = os.environ.get("GOOGLE_CUSTOM_SEARCH_API_KEY")
+  cse_id = os.environ.get("GOOGLE_CSE_ID")
+  query = f"{podcast_guest} {podcast_guest_org} {podcast_guest_title}"
 
-    output["summary"] = page.summary
-  except DisambiguationError as error:
-    options = error.options[:5]  # Limit to first 5 options
-    output["summary"] = f"Multiple options found for '{search_query}': {', '.join(options)}"
-  except PageError as error:
-    output["summary"] = f"No Wikipedia page found for '{search_query}'"
-  except HTTPTimeoutError as error:
-    output["summary"] = f"Timed out while searching for '{search_query}'"
-  except Exception as error:
-    output["summary"] = f"Unexpected error: {error}"
+  service = build("customsearch", "v1", developerKey=api_key)
+  result = service.cse().list(q=query, cx=cse_id, num=10).execute()
 
-    return output
-  except wikipedia.exceptions.PageError as error:
-    print("Wikipedia PageError:", error)
-    output["summary"] = "Unexpected error retrieving information about podcast guest"
-    return output
+  for item in result["items"]:
+    title = item["title"]
+    link = item["link"]
+    snippet = item["snippet"]
+    output["summary"].append({"title": title, "link": link, "snippet": snippet})
+
+  return output
 
 @stub.function(image=corise_image, secret=modal.Secret.from_name("my-openai-secret"))
 def get_podcast_highlights(podcast_transcript):
   import openai
   instructPrompt = """
-    Given a podcast transcript, I want you to extract the highlights of the show. Capture unexpected or valuable takeaways for the reader.
+    Given a podcast transcript, I want you to extract highlights from the transcript. Capture unexpected or valuable takeaways for the reader. Limit the results to 5 highlights.
   """
 
   request = instructPrompt + podcast_transcript
