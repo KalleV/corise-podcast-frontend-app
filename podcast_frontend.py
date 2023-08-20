@@ -2,6 +2,8 @@ import streamlit as st
 import modal
 import json
 import os
+import validators
+import string
 
 def main():
     """
@@ -36,8 +38,6 @@ def main():
 
     # User Input box
     st.sidebar.subheader("Add and Process New Podcast Feed")
-    import validators
-    import string
 
     podcast_url = st.sidebar.text_input("Link to RSS Feed")
 
