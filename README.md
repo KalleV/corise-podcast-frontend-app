@@ -1,9 +1,6 @@
 # corise-podcast-frontend-app
 
 ## Deploy backend to Modal
-# corise-podcast-frontend-app
-
-## Deploy backend to Modal
 
 ```bash
 modal deploy ./podcast_backend.py
