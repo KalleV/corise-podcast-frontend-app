@@ -111,10 +111,11 @@ def render_podcast_info(podcast_info):
         st.write(podcast_info['podcast_guest']['name'])
 
     with col4:
-        st.subheader("Podcast Guest Details")
-        guest_details = podcast_info["podcast_guest"]['summary']
-        for detail in guest_details:
-            st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
+        # Make the guest details section collapsible
+        with st.expander("Podcast Guest Details"):
+            guest_details = podcast_info["podcast_guest"]['summary']
+            for detail in guest_details:
+                st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
 
     # Display the five key moments
     st.subheader("Key Moments")
