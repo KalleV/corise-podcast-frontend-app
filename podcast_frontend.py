@@ -41,6 +41,7 @@ def main():
     if process_button:
         podcast_info = {}
 
+        st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
         st.markdown(
             """
             <script>
@@ -49,8 +50,6 @@ def main():
             """,
             unsafe_allow_html=True,
         )
-
-        st.markdown('<div id="spinner-anchor"></div>', unsafe_allow_html=True)
 
         # Process the new podcast feed
         with st.spinner("Processing podcast..."):
