@@ -130,7 +130,12 @@ def get_podcast_guest(podcast_transcript):
   - podcast_transcript (str): The transcript of the podcast episode.
 
   Returns:
-  - str: Information about the guest of the podcast episode.
+  - dict: A dictionary containing information about the guest of the podcast episode. The dictionary has the following keys:
+    - name (str): The name of the guest, along with their title and organization (if available).
+    - summary (list): A list of dictionaries containing summary information about the guest, obtained from Google Custom Search API. Each dictionary in the list has the following keys:
+      - title (str): The title of the search result.
+      - link (str): The link to the search result.
+      - snippet (str): A snippet of text from the search result.
   """
   import openai
   import json
@@ -210,6 +215,15 @@ def get_podcast_guest(podcast_transcript):
 
 @stub.function(image=corise_image, secret=modal.Secret.from_name("my-openai-secret"))
 def get_podcast_highlights(podcast_transcript):
+  """
+  Given a podcast transcript, this function extracts highlights from the transcript. It captures unexpected or valuable takeaways for the reader and limits the results to 5 highlights.
+
+  Args:
+      podcast_transcript (str): The transcript of the podcast.
+
+  Returns:
+      str: The highlights extracted from the podcast transcript.
+  """
   import openai
   instructPrompt = """
     Given a podcast transcript, I want you to extract highlights from the transcript. Capture unexpected or valuable takeaways for the reader. Limit the results to 5 highlights.
@@ -229,6 +243,16 @@ def get_podcast_highlights(podcast_transcript):
 
 @stub.function(image=corise_image, secret=modal.Secret.from_name("my-openai-secret"), timeout=1200)
 def process_podcast(url, path):
+  """
+  Processes a podcast by transcribing it, generating a summary, extracting guest information, and highlighting key moments.
+
+  Args:
+  - url (str): The URL of the podcast episode.
+  - path (str): The path to the podcast episode file.
+
+  Returns:
+  - dict: A dictionary containing the processed podcast details, summary, guest information, and highlights.
+  """
   output = {}
   podcast_details = get_transcribe_podcast.call(url, path)
   podcast_summary = get_podcast_summary.call(podcast_details['episode_transcript'])
@@ -242,6 +266,16 @@ def process_podcast(url, path):
 
 @stub.local_entrypoint()
 def test_method(url, path):
+  """
+  This function takes in a URL and path to a podcast episode and returns the podcast summary, guest information, and highlights.
+
+  Args:
+  - url (str): The URL of the podcast episode.
+  - path (str): The path to the podcast episode.
+
+  Returns:
+  - None
+  """
   podcast_details = get_transcribe_podcast.call(url, path)
   print ("Podcast Summary: ", get_podcast_summary.call(podcast_details['episode_transcript']))
   print ("Podcast Guest Information: ", get_podcast_guest.call(podcast_details['episode_transcript']))
