@@ -13,9 +13,16 @@ def download_whisper():
 
 stub = modal.Stub("corise-podcast-project")
 
+image_dependencies = [
+  "ffmpeg",
+  #"git"
+]
+
 dependencies = [
   "feedparser",
   "https://github.com/openai/whisper/archive/9f70a352f9f8630ab3aa0d06af5cb9532bd8c21d.tar.gz",
+  #"git+https://github.com/sanchit-gandhi/whisper-jax.git",
+  #"jax[cuda]",
   "requests",
   "ffmpeg",
   "openai",
@@ -24,9 +31,83 @@ dependencies = [
   "ffmpeg-python"
 ]
 
+# Whisper Jax (faster than regular Whisper):
+#  - https://github.com/sanchit-gandhi/whisper-jax.git
+#  - Notebook: https://github.com/sanchit-gandhi/whisper-jax/blob/main/whisper-jax-tpu.ipynb
+# 
+# Dependencies:
+#  - https://github.com/google/jax#pip-installation-gpu-cuda-installed-via-pip-easier
+jax_releases_url = "https://storage.googleapis.com/jax-releases/jax_cuda_releases.html"
 whisper_url = "https://github.com/openai/whisper/archive/9f70a352f9f8630ab3aa0d06af5cb9532bd8c21d.tar.gz"
 
-corise_image = modal.Image.debian_slim().pip_install(*dependencies).apt_install("ffmpeg").run_function(download_whisper)
+corise_image = modal.Image.debian_slim().apt_install(*image_dependencies).pip_install(*dependencies, extra_index_url=jax_releases_url).run_function(download_whisper)
+
+@stub.function(image=corise_image, gpu="any", timeout=600)
+def get_transcribe_podcast_with_jax(rss_url, local_path):
+  """
+  Downloads a podcast episode from the given RSS feed URL and transcribes it using the Whisper Jax model.
+
+  Args:
+  - rss_url (str): The URL of the RSS feed.
+  - local_path (str): The local path to save the downloaded podcast episode.
+
+  Returns:
+  - dict: A dictionary containing the podcast title, episode title, episode image, and episode transcript.
+  """
+  print ("Starting Podcast Transcription Function")
+  print ("Feed URL: ", rss_url)
+  print ("Local Path:", local_path)
+
+  # Read from the RSS Feed URL
+  import feedparser
+  intelligence_feed = feedparser.parse(rss_url)
+  podcast_title = intelligence_feed['feed']['title']
+  episode_title = intelligence_feed.entries[0]['title']
+  episode_image = intelligence_feed['feed']['image'].href
+  for item in intelligence_feed.entries[0].links:
+    if (item['type'] == 'audio/mpeg'):
+      episode_url = item.href
+  episode_name = "podcast_episode.mp3"
+  print ("RSS URL read and episode URL: ", episode_url)
+
+  # Download the podcast episode by parsing the RSS feed
+  from pathlib import Path
+  p = Path(local_path)
+  p.mkdir(exist_ok=True, parents=True)
+
+  print ("Downloading the podcast episode")
+  import requests
+  with requests.get(episode_url, stream=True) as r:
+    r.raise_for_status()
+    episode_path = p.joinpath(episode_name)
+    with open(episode_path, 'wb') as f:
+      for chunk in r.iter_content(chunk_size=8192):
+        f.write(chunk)
+
+  print ("Podcast Episode downloaded")
+
+  from whisper_jax import FlaxWhisperPipline
+
+  # Load model from saved location
+  print ("Load the Whisper model")
+
+  # instantiate pipeline
+  pipeline = FlaxWhisperPipline("openai/whisper-large-v2")
+
+  # Perform the transcription
+  print ("Starting podcast transcription")
+
+  # JIT compile the forward call - slow, but we only do once
+  result = pipeline(local_path + episode_name)
+
+  # Return the transcribed text
+  print ("Podcast transcription completed, returning results...")
+  output = {}
+  output['podcast_title'] = podcast_title
+  output['episode_title'] = episode_title
+  output['episode_image'] = episode_image
+  output['episode_transcript'] = result['text']
+  return output
 
 @stub.function(image=corise_image, gpu="any", timeout=600)
 def get_transcribe_podcast(rss_url, local_path):
@@ -59,7 +140,7 @@ def get_transcribe_podcast(rss_url, local_path):
   # Download the podcast episode by parsing the RSS feed
   from pathlib import Path
   p = Path(local_path)
-  p.mkdir(exist_ok=True)
+  p.mkdir(exist_ok=True, parents=True)
 
   print ("Downloading the podcast episode")
   import requests
@@ -106,7 +187,8 @@ def get_podcast_summary(podcast_transcript):
   import openai
 
   instructPrompt = """
-     Act as a podcast transcriber. I want you to summarize the main points of the given podcast. Highlight the main points discussed in the podcast. Provide key takeaways.
+     Act as a podcast transcriber. Write a 500-word summary of the podcast, highlighting the main topics, speakers, and memorable insights.
+     Include direct quotations where relevant.
   """
 
   request = instructPrompt + podcast_transcript
