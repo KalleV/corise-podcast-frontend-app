@@ -106,15 +106,21 @@ def render_podcast_info(podcast_info):
     # Display the podcast guest and their details in a side-by-side layout
     col3, col4 = st.columns([3, 7])
 
-    with col3:
-        st.subheader("Podcast Guest")
-        st.write(podcast_info['podcast_guest']['name'])
+    if 'podcast_guest' in podcast_info:
+        with col3:
+            st.subheader("Podcast Guest")
+            st.write(podcast_info['podcast_guest']['name'])
 
-    with col4:
-        st.subheader("Podcast Guest Details")
-        guest_details = podcast_info["podcast_guest"]['summary']
-        for detail in guest_details:
-            st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
+        with col4:
+            # Make the guest details section collapsible
+            with st.expander("Podcast Guest Details"):
+                guest_details = podcast_info["podcast_guest"]['summary']
+                for detail in guest_details:
+                    st.markdown(f"<a href='{detail['link']}' target='_blank'>{detail['title']}</a><br>{detail['snippet']}", unsafe_allow_html=True)
+    else:
+        with col3:
+            st.subheader("Podcast Guest")
+            st.write("No guest information available")
 
     # Display the five key moments
     st.subheader("Key Moments")
