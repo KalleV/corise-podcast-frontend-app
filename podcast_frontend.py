@@ -7,7 +7,7 @@ def main():
     """
     Main function that runs the Streamlit app for the Newsletter Dashboard.
     """
-    st.title("Newsletter Dashboard")
+    st.title("Kalle's Newsletter Dashboard")
 
     available_podcast_info = create_dict_from_json_files('.')
 
@@ -63,7 +63,7 @@ def main():
     url = st.sidebar.text_input("Link to RSS Feed")
 
     process_button = st.sidebar.button("Process Podcast Feed")
-    st.sidebar.markdown("**Note**: Podcast processing can take upto 5 mins, please be patient.")
+    st.sidebar.markdown("**Note**: Podcast processing can take up to 5 mins, please be patient.")
 
     if process_button:
 
